@@ -1,34 +1,43 @@
 ---
-title: Foobar
+title: Proc Macros
 separator: <!--s-->
 verticalSeparator: <!--v-->
-theme: moon
+theme: black
+highlightTheme: ir-black
 revealOptions:
   transition: 'fade'
 ---
 
-<style type="text/css">
-body { text-align: left; }
-</style>
+# Proc Macros
 
-# Bla
+Let's make writing Rust proc-macro fun
 
-- Point 2
-- Point 2
-- Point 2
-- Point 2
+##### Presented by Dan Aloni ([@DanAloni](https://twitter.com/DanAloni))
 
-```rust
-fn main() {
-    println!("X");
-}
-
-```
+https://github.com/da-x/rust-gentle-proc-macro
 
 ---
 
-## Second slide
+## Two main types of Rust macros
 
-> Best quote ever.
+Declarative: using pattern matching
 
-Note: speaker notes FTW!
+```rust
+macro_rules! hello {
+    (3) => {
+        println!("three!");
+    };
+    ($e:expr) => {
+        $e;
+    };
+}
+```
+
+Procedural: compiled using Rust code
+
+```rust
+#[proc_macro]
+pub fn hello(_: TokenStream) -> TokenStream {
+    panic!("Help! I'm scared implementing this");
+}
+```
