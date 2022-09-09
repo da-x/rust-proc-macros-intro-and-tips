@@ -4,5 +4,8 @@ all:
 	yarn install
 	$(REV) --static _site
 
+test:
+	python test.py
+
 serve:
 	$(REV) -w
