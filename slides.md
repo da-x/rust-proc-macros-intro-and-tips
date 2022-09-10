@@ -18,6 +18,17 @@ https://github.com/da-x/rust-gentle-proc-macro
 
 ---
 
+## Procedural Macros Topics
+
+- In this talk I'll show:
+    - Useful crates to assist in implementation
+    - Techniques to handle derive parsing
+    - How to provide diagnostics for proc macro users
+    - Techniques in debugging proc macros
+    - Performance tricks
+
+---
+
 ## Two main types of Rust macros
 
 Declarative: using pattern matching
@@ -42,8 +53,6 @@ pub fn hello(_: TokenStream) -> TokenStream {
 ```
 ---
 
-## Two main types of Rust macros
-
 - Declarative: defined via pattern matching, can be used
 inside the same crate that defines it.
 - Procedural:
@@ -54,7 +63,7 @@ inside the same crate that defines it.
 
 ---
 
-## Cargo.toml for a proc macro
+## Cargo.toml: proc macro crates
 
 ```toml
 [package]
@@ -86,7 +95,7 @@ macro_rules! hello {
 <!--- snippet-name: hello-proc2 -->
 <!--- snippet-template: proc-macro2 -->
 
-Can be re-implemented as a procedural macro:
+Re-implemented as a 'function-like' procedural macro:
 
 ```rust
 use {proc_macro::TokenStream, quote::quote};
@@ -124,8 +133,6 @@ quote! { let value = vec![#(#list_of_stuff),*]; }
 
 
 ---
-
-## The `quote` crate, #2
 
 * Using interpolation for composition of several other token stream generated previously by `quote!`:
 
@@ -223,9 +230,9 @@ let stmt: Stmt = parse_quote! {
 
 ---
 
-### Proc Macros for `#[derive(..)]`
+### Derive macros
 
-* When we do this, a special kind of proc macro is invoked. The purpose is usually to add impls.
+* We can implement a macro to be used with `#[derive(..)]`. i.e to be used in the following manner:
 
 ```rust
 use mymacro::MyMacro;
@@ -239,11 +246,9 @@ struct Foo {
 
 ---
 
-### Proc Macros for `#[derive(..)]`
-
 * Input is the token stream of the type definition, output
   are tokens appended in compilation.
-* Filters for the specified attributes.
+* Name of helper attributes can be specified.
 
 ```rust
 #[proc_macro_derive(MyMacro, attributes(mymacro))]
@@ -260,7 +265,7 @@ pub fn my_macro(input: TokenStream) -> TokenStream {
 
 ---
 
-## DeriveInput
+## `syn`'s DeriveInput
 
 ```rust []
 pub struct DeriveInput {
@@ -280,8 +285,7 @@ pub enum Data {
 
 ---
 
-## DeriveInput
-
+## `syn`'s DeriveInput
 ```rust [11]
 pub struct DeriveInput {
     pub attrs: Vec<Attribute>,
@@ -300,8 +304,6 @@ pub enum Data {
 
 ---
 
-## DataEnum
-
 ```rust []
 pub struct DataEnum {
     pub enum_token: Enum,
@@ -318,9 +320,7 @@ pub struct Variant {
 ```
 ---
 
-## DataEnum
-
-```rust [10]
+```rust [4,10]
 pub struct DataEnum {
     pub enum_token: Enum,
     pub brace_token: Brace,
@@ -337,8 +337,6 @@ pub struct Variant {
 
 ---
 
-## Fields
-
 ```rust []
 pub enum Fields {
     Named(FieldsNamed),
@@ -354,9 +352,7 @@ pub struct FieldsNamed {
 
 ---
 
-## Fields
-
-```rust [9]
+```rust [2,9]
 pub enum Fields {
     Named(FieldsNamed),
     Unnamed(FieldsUnnamed),
@@ -370,8 +366,6 @@ pub struct FieldsNamed {
 ```
 
 ---
-
-## Field
 
 ```rust []
 pub struct Field {
@@ -381,6 +375,23 @@ pub struct Field {
     pub colon_token: Option<Colon>,
     pub ty: Type,
 }
+```
+
+---
+
+## Derive macro helper
+
+- [`proc_macro_roids`](https://docs.rs/proc_macro_roids/latest/proc_macro_roids/) crate adds helper methods to `DeriveInput`
+and related types.
+
+```rust
+let ast = parse_macro_input!(input as DeriveInput);
+let relevant_fields = ast.fields()
+    .iter()
+    .filter(|field| !field.is_phantom_data())
+    .filter(|field| !field.contains_tag(
+       &parse_quote!(super_derive), &parse_quote!(skip)));
+
 ```
 
 ---
@@ -405,7 +416,7 @@ pub fn bar(_: TokenStream) -> TokenStream {
 ---
 
 
-### Trick: Export your derive macro
+## Trick: Export your derive macro
 
 This is only available as `#[derive(Foo)]`:
 
@@ -416,7 +427,7 @@ pub fn foo(_: TokenStream) -> TokenStream {
 }
 ```
 
-We can re-export this logic as a general macro:
+Re-export this logic as a function-like macro:
 
 ```rust
 #[proc_macro]
@@ -426,8 +437,6 @@ pub fn foo_derive(input: TokenStream) -> TokenStream {
 ```
 
 ---
-
-### Trick: Export your derive macro, #2
 
 This way you can execute your derive on `std` types:
 
@@ -442,23 +451,6 @@ foo_derive!{
 
 Works on some cases, instead of writing an `impl` for them by hand.
 
-
----
-
-### Derive macro helper
-
-- [`proc_macro_roids`](https://docs.rs/proc_macro_roids/latest/proc_macro_roids/) crate adds helper methods to `DeriveInput`
-and related types.
-
-```rust
-let ast = parse_macro_input!(input as DeriveInput);
-let relevant_fields = ast.fields()
-    .iter()
-    .filter(|field| !field.is_phantom_data())
-    .filter(|field| !field.contains_tag(
-       &parse_quote!(super_derive), &parse_quote!(skip)));
-
-```
 
 ---
 
@@ -494,8 +486,6 @@ error: proc-macro derive panicked
 
 ---
 
-## `proc_macro_error`
-
 - Use the `proc_macro_error` crate (see [guide](https://docs.rs/proc-macro-error/1.0.4/proc_macro_error/index.html#guide)).
 
 ```rust [2,8-9]
@@ -526,8 +516,6 @@ error: no support for this type kind
   |          ^^^^^^^
 ```
 ---
-
-## Using spans
 
 We can use pointers to user code, these are `Span`s:
 
@@ -572,10 +560,8 @@ error: mymacro: no support for deriving on this type kind
 
 ---
 
-## Debugging proc macros, #2
-
 ```rust
-// Pretty print generated Rust code via rustfmt
+// Pretty-print generated Rust code via rustfmt
 fn rustfmt(code: TokenStream) -> String {
     let out: Option<&mut std::io::Sink> = None;
 
@@ -588,3 +574,12 @@ fn rustfmt(code: TokenStream) -> String {
         .expect("rustfmt returned no code").1)
 }
 ```
+
+---
+
+## TODO
+
+- Attribute macros.
+- Use `crate::` in generated code.
+- Consider generating a submodule for derive.
+- Write about building proc macro in release for dev build.
