@@ -63,6 +63,14 @@ inside the same crate that defines it.
 
 ---
 
+## Types of proc macros
+
+- Function-like:  `call!{}`
+- Attribute:  `#[attr]`
+- Derive :  `#[Derive(Macro)]`
+
+---
+
 ## Cargo.toml: proc macro crates
 
 ```toml
