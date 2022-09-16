@@ -588,6 +588,7 @@ fn rustfmt(code: TokenStream) -> String {
 ## TODO
 
 - Attribute macros.
-- Use `crate::` in generated code.
+- Hygiene: Use `crate::` in generated code.
 - Consider generating a submodule for derive.
 - Write about building proc macro in release for dev build.
+- Annoying things: go-to definition does not work.
