@@ -8,9 +8,9 @@ revealOptions:
   transition: 'fade'
 ---
 
-# Proc Macros Gently
+# Proc Macros Tips
 
-Let's make writing Rust procedural macros fun
+Let's make Rust procedural macros not scary
 
 ##### Presented by Dan Aloni ([@DanAloni](https://twitter.com/DanAloni))
 
@@ -18,7 +18,7 @@ https://github.com/da-x/rust-gentle-proc-macro
 
 ---
 
-## Procedural Macros Topics
+## Procedural Macros
 
 - In this talk I'll show:
     - Useful crates to assist in implementation
@@ -48,7 +48,7 @@ Procedural: compiled Rust code, AKA "proc macro"
 ```rust
 #[proc_macro]
 pub fn hello(_: TokenStream) -> TokenStream {
-    panic!("Help! I'm scared implementing this");
+    todo!();
 }
 ```
 ---
@@ -65,7 +65,7 @@ inside the same crate that defines it.
 
 ## Types of proc macros
 
-- Function-like:  `call!{}`
+- Function-like:  `call!()`
 - Attribute:  `#[attr]`
 - Derive :  `#[Derive(Macro)]`
 
