@@ -56,7 +56,7 @@ pub fn hello(_: TokenStream) -> TokenStream {
 - Declarative: defined via pattern matching, can be used
 inside the same crate that defines it.
 - Procedural:
-    - Compiled Rust code.
+    - A compiled Rust code for parsing any Rust token stream and generating Rust code.
     - Has to be contained in a special `lib` crate.
     - Shared library that `rustc` loads.
     - Can run faster than declarative equivalent.
@@ -120,38 +120,6 @@ pub fn hello(input: TokenStream) -> TokenStream {
 
     panic!("nothing matched");
 }
-```
-
----
-
-## The `quote` crate
-
-- Provides the `quote` macro that generates a token stream. Supports interpolation of other token
-streams or typed AST fragments in a syntax similar to declarative macros.
-
-```rust
-let sometype = quote! { Vec<u64> };
-quote! { let value: #sometype = vec![]; }
-```
-
-```rust
-let list_of_stuff = vec![quote!{ 3 }, quote!{ 4 }];
-quote! { let value = vec![#(#list_of_stuff),*]; }
-```
-
-
----
-
-* Using interpolation for composition of several other token stream generated previously by `quote!`:
-
-```rust
-let type_definition = quote! {...};
-let methods = quote! {...};
-
-let tokens = quote! {
-    #type_definition
-    #methods
-};
 ```
 
 ---
@@ -222,6 +190,38 @@ See the [rest of the example](https://github.com/dtolnay/syn/blob/fa1a855ea02661
 
 ---
 
+## The `quote` crate
+
+- Provides the `quote` macro that generates a token stream. Supports interpolation of other token
+streams or typed AST fragments in a syntax similar to declarative macros.
+
+```rust
+let sometype = quote! { Vec<u64> };
+quote! { let value: #sometype = vec![]; }
+```
+
+```rust
+let list_of_stuff = vec![quote!{ 3 }, quote!{ 4 }];
+quote! { let value = vec![#(#list_of_stuff),*]; }
+```
+
+
+---
+
+* Using interpolation for composition of several other token stream generated previously by `quote!`:
+
+```rust
+let type_definition = quote! {...};
+let methods = quote! {...};
+
+let tokens = quote! {
+    #type_definition
+    #methods
+};
+```
+
+---
+
 ### Syn macro `parse_quote!{}`
 
 Like `quote` but outputs concrete AST types rather than token
@@ -240,7 +240,7 @@ let stmt: Stmt = parse_quote! {
 
 ### Derive macros
 
-* We can implement a macro to be used with `#[derive(..)]`. i.e to be used in the following manner:
+* A proc macro receiving a single type definition and output Rust code for that type, usually `impl`s.
 
 ```rust
 use mymacro::MyMacro;
