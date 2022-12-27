@@ -1,5 +1,5 @@
 ---
-title: Proc Macros
+title: Procedural Macros Intro + Tips
 separator: <!--s-->
 verticalSeparator: <!--v-->
 theme: black
@@ -8,24 +8,31 @@ revealOptions:
   transition: 'fade'
 ---
 
-# Proc Macros Tips
+# Procedural Macros Intro + Tips
 
 Let's make Rust procedural macros not scary
 
 ##### Presented by Dan Aloni ([@DanAloni](https://twitter.com/DanAloni))
 
-https://github.com/da-x/rust-gentle-proc-macro
+https://github.com/da-x/proc-macros-into-and-tips
 
 ---
 
-## Procedural Macros
-
-- In this talk I'll show:
+- Topics covered:
     - Useful crates to assist in implementation
     - Techniques to handle derive parsing
     - How to provide diagnostics for proc macro users
     - Techniques in debugging proc macros
     - Performance tricks
+
+---
+
+## First, what are macros
+
+- In compile time, take in language tokens (e.g, `foo`, `+`, `[`), emit fully
+valid Rust language items
+- Purpose: boilerplate reduction
+- Advance uses: extending the syntax ; embedding other languages
 
 ---
 
@@ -267,7 +274,7 @@ pub fn my_macro(input: TokenStream) -> TokenStream {
     // Build the output
     quote! {
         /* ... */
-    }.into();
+    }.into()
 }
 ```
 
@@ -585,10 +592,54 @@ fn rustfmt(code: TokenStream) -> String {
 
 ---
 
-## TODO
+## Macro hygiene
 
-- Attribute macros.
-- Hygiene: Use `crate::` in generated code.
-- Consider generating a submodule for derive.
-- Write about building proc macro in release for dev build.
-- Annoying things: go-to definition does not work.
+- Declarative macros cannot shadow definitions in context. Example:
+
+```
+macro_rules! hello {
+    () => { let x = 2; };
+}
+```
+
+- `hello!()` uses cannot see `x` in scope.
+- What about proc macros hygiene? [Rust issue 54727 (2018-)](https://github.com/rust-lang/rust/issues/54727), still open Dec 2022.
+
+---
+
+Hygiene synthesis: isolate generated code to module
+
+```rust
+#[proc_macro_derive(MyMacro, attributes(mymacro))]
+pub fn my_macro(input: TokenStream) -> TokenStream {
+    let unique_id = todo!();
+
+    quote! {
+        mod #unique_id {
+            use other_crate::*;
+
+            // pub NewDefinition here
+        }
+        use #unique_id::NewDefinition;
+    }.into()
+}
+```
+---
+
+# Performance
+
+- The Rust compiler is optimized
+- Proc macro run more than they change
+- Your macro binary code should be too:
+
+```toml
+[profile.dev.package.myprocmacro]
+opt-level = 3
+```
+
+---
+
+### Resources
+
+- [Procedural macros under the hood: Part I (2022)](https://blog.jetbrains.com/rust/2022/03/18/procedural-macros-under-the-hood-part-i/)
+- [Procedural macros under the hood: Part II (2022)](https://blog.jetbrains.com/rust/2022/07/07/procedural-macros-under-the-hood-part-ii/)
