@@ -12,18 +12,19 @@ revealOptions:
 
 Let's make Rust procedural macros not scary
 
-##### by Dan Aloni ([@DanAloni](https://twitter.com/DanAloni))
+##### presented by Dan Aloni ([@DanAloni](https://twitter.com/DanAloni))
 
-https://github.com/da-x/proc-macros-intro-and-tips
+https://blog.aloni.org/rust-proc-macros-intro-and-tips
 
 ---
 
 - Topics covered:
+    - What are procedural macros
     - Useful crates to assist in implementation
     - Techniques to handle derive parsing
     - How to provide diagnostics for proc macro users
     - Techniques in debugging proc macros
-    - Performance tricks
+    - Performance tuning
 
 ---
 
@@ -61,12 +62,12 @@ pub fn hello(_: TokenStream) -> TokenStream {
 ---
 
 - Declarative: defined via pattern matching, can be used
-inside the same crate that defines it.
+inside the same crate that defines it
 - Procedural:
-    - A compiled Rust code for parsing any Rust token stream and generating Rust code.
-    - Has to be contained in a special `lib` crate.
-    - Shared library that `rustc` loads.
-    - Can run faster than declarative equivalent.
+    - A compiled Rust code for parsing any Rust token stream and generating Rust code
+    - Has to be contained in a special `lib` crate
+    - Shared library that `rustc` loads
+    - Can run faster than declarative equivalent
 
 ---
 
@@ -94,7 +95,7 @@ proc-macro = true # Special type of crate
 quote = "1.*"
 # For parsing Rust code (and token streams in general)
 syn = { version = "1.0.*", features = ["full"]  }
-proc-macro2 = "1" # Helper
+proc-macro2 = "1" # Compiler glue
 ```
 
 ---
@@ -193,14 +194,14 @@ pub fn lazy_static(input: TokenStream) -> TokenStream {
 }
 ```
 
-See the [rest of the example](https://github.com/dtolnay/syn/blob/fa1a855ea02661cf79e7d6af1e60b5a4a08698ac/examples/lazy-static/lazy-static/src/lib.rs) in `syn` repo.
+See the [rest of the example](https://github.com/dtolnay/syn/blob/fa1a855ea02661cf79e7d6af1e60b5a4a08698ac/examples/lazy-static/lazy-static/src/lib.rs) in `syn` repo
 
 ---
 
 ## The `quote` crate
 
 - Provides the `quote` macro that generates a token stream. Supports interpolation of other token
-streams or typed AST fragments in a syntax similar to declarative macros.
+streams or typed AST fragments in a syntax similar to declarative macros
 
 ```rust
 let sometype = quote! { Vec<u64> };
@@ -232,7 +233,7 @@ let tokens = quote! {
 ### Syn macro `parse_quote!{}`
 
 Like `quote` but outputs concrete AST types rather than token
-stream. Assists in generating valid Rust.
+stream. Assists in generating valid Rust
 
 ```rust
 let name = quote!(v);
@@ -247,7 +248,7 @@ let stmt: Stmt = parse_quote! {
 
 ### Derive macros
 
-* A proc macro receiving a single type definition and output Rust code for that type, usually `impl`s.
+* A proc macro receiving a single type definition and output Rust code for that type, usually `impl`s
 
 ```rust
 use mymacro::MyMacro;
@@ -262,8 +263,8 @@ struct Foo {
 ---
 
 * Input is the token stream of the type definition, output
-  are tokens appended in compilation.
-* Name of helper attributes can be specified.
+  are tokens appended in compilation
+* Name of helper attributes can be specified
 
 ```rust
 #[proc_macro_derive(MyMacro, attributes(mymacro))]
@@ -397,7 +398,7 @@ pub struct Field {
 ## Derive macro helper
 
 - [`proc_macro_roids`](https://docs.rs/proc_macro_roids/latest/proc_macro_roids/) crate adds helper methods to `DeriveInput`
-and related types.
+and related types
 
 ```rust
 let ast = parse_macro_input!(input as DeriveInput);
@@ -414,7 +415,7 @@ let relevant_fields = ast.fields()
 
 ### Single crate, multiple proc macros
 
-A single proc macro crate can export several macros.
+A single proc macro crate can export several macros
 
 ```rust
 #[proc_macro]
@@ -464,7 +465,7 @@ foo_derive!{
 }
 ```
 
-Works on some cases, instead of writing an `impl` for them by hand.
+Works on some cases, instead of writing an `impl` for them by hand
 
 
 ---
@@ -501,7 +502,7 @@ error: proc-macro derive panicked
 
 ---
 
-- Use the `proc_macro_error` crate (see [guide](https://docs.rs/proc-macro-error/1.0.4/proc_macro_error/index.html#guide)).
+- Use the `proc_macro_error` crate (see [guide](https://docs.rs/proc-macro-error/1.0.4/proc_macro_error/index.html#guide))
 
 ```rust [2,8-9]
 #[proc_macro_derive(MyMacro, attributes(mymacro))]
@@ -568,10 +569,10 @@ error: mymacro: no support for deriving on this type kind
 ## Debugging proc macros
 
 * Sometimes during development your proc macro may generate
-  a valid `TokenStream` but invalid Rust code.
-* Cannot use `cargo expand` in that case.
+  a valid `TokenStream` but invalid Rust code
+* Cannot use `cargo expand` in that case
 * The `Display` impl for `TokenStream` and `syn` types are not
-  good enough to eyeball the issue.
+  good enough to eyeball the issue
 
 ---
 
@@ -621,15 +622,15 @@ macro_rules! hello {
 }
 ```
 
-- `hello!()` uses cannot see `x` in scope.
-- What about proc macros hygiene? [Rust issue 54727 (2018-)](https://github.com/rust-lang/rust/issues/54727), still open Dec 2022.
+- `hello!()` uses cannot see `x` in scope
+- What about proc macros hygiene? [Rust issue 54727 (2018-)](https://github.com/rust-lang/rust/issues/54727), still open Dec 2022
 
 ---
 
 Hygiene synthesis: isolate generated code to module
 
 ```rust
-#[proc_macro_derive(MyMacro, attributes(mymacro))]
+#[proc_macro]
 pub fn my_macro(input: TokenStream) -> TokenStream {
     let unique_id = todo!();
 
