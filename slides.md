@@ -12,9 +12,9 @@ revealOptions:
 
 Let's make Rust procedural macros not scary
 
-##### Presented by Dan Aloni ([@DanAloni](https://twitter.com/DanAloni))
+##### by Dan Aloni ([@DanAloni](https://twitter.com/DanAloni))
 
-https://github.com/da-x/proc-macros-into-and-tips
+https://github.com/da-x/proc-macros-intro-and-tips
 
 ---
 
