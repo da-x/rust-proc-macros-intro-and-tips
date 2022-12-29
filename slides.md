@@ -592,6 +592,25 @@ fn rustfmt(code: TokenStream) -> String {
 
 ---
 
+```rust
+// Save derivations to file for debug
+#[proc_macro_derive(MyMacro, attributes(mymacro))]
+pub fn my_macro(input: TokenStream) -> TokenStream {
+    let input: DeriveInput = syn::parse(input).unwrap();
+    let code: proc_macro2::TokenStream = todo!();
+
+    if let Ok(dir) = std::env::var("DERIVE_SAVE_DIR") {
+        let dir = Path::new(dir.as_str())
+           .join(format!("derive_mymacro_{}.rs",
+            &input.ident);
+        tokens_to_rustfmt_file(&dir, &code);
+    }
+    code.into()
+}
+```
+
+---
+
 ## Macro hygiene
 
 - Declarative macros cannot shadow definitions in context. Example:
@@ -630,7 +649,7 @@ pub fn my_macro(input: TokenStream) -> TokenStream {
 
 - The Rust compiler is optimized
 - Proc macro run more than they change
-- Your macro binary code should be too:
+- In dev builds, your macro binary code should be too:
 
 ```toml
 [profile.dev.package.myprocmacro]
@@ -639,7 +658,10 @@ opt-level = 3
 
 ---
 
+
 ### Resources
 
-- [Procedural macros under the hood: Part I (2022)](https://blog.jetbrains.com/rust/2022/03/18/procedural-macros-under-the-hood-part-i/)
-- [Procedural macros under the hood: Part II (2022)](https://blog.jetbrains.com/rust/2022/07/07/procedural-macros-under-the-hood-part-ii/)
+- [Procedural Macros - The Rust Reference](https://doc.rust-lang.org/reference/procedural-macros.html)
+- [dtolnay/proc-macro-workshop: Learn to write Rust procedural macros](https://github.com/dtolnay/proc-macro-workshop) (2019)
+- [Procedural macros under the hood: Part I](https://blog.jetbrains.com/rust/2022/03/18/procedural-macros-under-the-hood-part-i/) (2022)
+- [Procedural macros under the hood: Part II](https://blog.jetbrains.com/rust/2022/07/07/procedural-macros-under-the-hood-part-ii/) (2022)
